@@ -1,5 +1,6 @@
 const MongoClient = require('mongodb').MongoClient; //mongodb driver to connect to our NodeJS appliaction to the database.
 const assert = require('assert');//for checking eqality conditions
+const dboper = require('./operations');
 
 const url = 'mongodb://localhost:27017/'; //url of the mongo db database
 const dbname = 'conFusion';//name of the document we want to connect to.
@@ -7,11 +8,35 @@ const dbname = 'conFusion';//name of the document we want to connect to.
 //maintaining synchronous programming so that each process is executed only after the previous one has been executed. This is made sure by performing all conscequent functions within the callback function of the preceding function. Simply put, a function is nested withiin another function, so that the outer function completes exceution only after the inner function has been executed.
 
 MongoClient.connect(url,(err,client) => { //connecting to the database
+
     assert.equal(err,null); //checking for any errors
+
     console.log('Connected correctly to the server');
+
     const db = client.db(dbname);//using a variable to address our document
+
     const collection = db.collection('dishes');//using a variable to address our collection
-    collection.insertOne({"name":"Uthappizza","description":"test"},(err,result) => {
+
+    dboper.insertDocument(db,{name:"Vadonut",description:"Test"}, 'dishes', (result) =>{
+        console.log('Insert Document:\n',result.ops); //console.log() will use ',' instead of '+' because we want to print a JS object and not a value.
+
+        dboper.findDocuments(db,'dishes',(docs) => {
+            console.log('Found Documents:\n',docs);
+
+            dboper.updateDocument(db,{name:"Vadonut"},{description:'Updated Test'},'dishes',(result) => {
+                console.log('Updated document:\n',result.result);
+
+                dboper.findDocuments(db,'dishes',(docs) => {
+                    console.log('Found Updated Documents:\n',docs);
+
+                    db.dropCollection('dishes', (result) => {
+                        console.log('Dropped Coollection:',result);
+                    });
+            });
+         });
+      });
+    });
+    /*collection.insertOne({"name":"Uthappizza","description":"test"},(err,result) => {
         assert.equal(err,null);
 
         console.log('After insert:\n');
@@ -31,5 +56,5 @@ MongoClient.connect(url,(err,client) => { //connecting to the database
                 client.close();
             });
         });
-    });
+    });*/
 });
