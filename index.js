@@ -5,17 +5,52 @@ const dboper = require('./operations');
 const url = 'mongodb://localhost:27017/'; //url of the mongo db database
 const dbname = 'conFusion';//name of the document we want to connect to.
 
-//maintaining synchronous programming so that each process is executed only after the previous one has been executed. This is made sure by performing all conscequent functions within the callback function of the preceding function. Simply put, a function is nested withiin another function, so that the outer function completes exceution only after the inner function has been executed.
+MongoClient.connect(url).then((client) => { //sending connection request to the database using the mongoDB driver refered using "MongoClient", from which a promise is returned because no callback back function is sent as a parameter.Because the promise is resolved, ".then()" part is executed.
 
-MongoClient.connect(url,(err,client) => { //connecting to the database
+    console.log('Connected correctly to the server');
+    const db = client.db(dbname);//using a variable to address our document
+
+    dboper.insertDocument(db,{name:"Vadonut",description:"Test"}, 'dishes')
+    //Because the promise is resolved, ".then()" part is executed.
+     .then((result) =>{
+        console.log('Insert Document:\n',result.ops);
+
+        return dboper.findDocuments(db,'dishes') //Before ending the then part we are calling the next operation.
+     })
+    //Because the promise of 'findDocuments' is resolved, ".then()" part is executed.
+    .then((docs) => {
+        console.log('Found Documents:\n',docs);
+
+        return dboper.updateDocument(db,{name:"Vadonut"},{description:'Updated Test'},'dishes') 
+     })
+    .then((result) => {
+        console.log('Updated document:\n',result.result);
+
+        return dboper.findDocuments(db,'dishes')
+     })
+    .then((docs) => {
+        console.log('Found Updated Documents:\n',docs);
+
+        return db.dropCollection('dishes')
+    })
+    .then((result) => {
+         console.log('Dropped Collection:',result);
+         client.close();
+    })
+    .catch((err) => console.log(err));
+})
+.catch((err) => console.log(err));
+
+
+//maintaining synchronous programming so that each process is executed only after the previous one has been executed. This is made sure by performing all conscequent functions within the callback function of the preceding function. Simply put, a function is nested withiin another function, so that the outer function completes exceution only after the inner function has been executed. This leads to callback hell.
+
+/*MongoClient.connect(url,(err,client) => { //connecting to the database
 
     assert.equal(err,null); //checking for any errors
 
     console.log('Connected correctly to the server');
 
     const db = client.db(dbname);//using a variable to address our document
-
-    const collection = db.collection('dishes');//using a variable to address our collection
 
     dboper.insertDocument(db,{name:"Vadonut",description:"Test"}, 'dishes', (result) =>{
         console.log('Insert Document:\n',result.ops); //console.log() will use ',' instead of '+' because we want to print a JS object and not a value.
@@ -56,5 +91,5 @@ MongoClient.connect(url,(err,client) => { //connecting to the database
                 client.close();
             });
         });
-    });*/
-});
+    });
+});*/
